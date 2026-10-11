@@ -43,26 +43,12 @@ Donne Martin (CC BY 4.0), pre-loaded as the default learning material. Learners 
 
 ## Tech stack
 
-```mermaid
-flowchart TB
-    subgraph browser["In the browser"]
-        worker["<b>Service worker</b><br/>Cache Storage, Background Fetch"]
-        page["<b>The page</b><br/>Plain HTML, CSS and JavaScript<br/>No framework, no build step"]
-        map["<b>Progress map</b><br/>React 18 and React Flow<br/>bundled with esbuild"]
-        engine["<b>Offline engine</b><br/>ES modules: IndexedDB, search,<br/>practice, spaced repetition"]
-        py["<b>Try it in Python</b><br/>Pyodide"]
-        ai["<b>On-device AI</b><br/>WebLLM on WebGPU and WebAssembly<br/>bundled with esbuild"]
-    end
-    server["<b>SCIRE server</b><br/>HTTPS and JSON"]
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/tech-stack-dark.svg">
+  <img src="assets/tech-stack-light.svg" alt="The tech stack. In the browser: the page in plain HTML, CSS and JavaScript; a service worker that keeps it working offline; a progress map built with React and React Flow; an offline engine using IndexedDB; Python through Pyodide and WebAssembly; and an on-device AI using WebLLM on WebGPU and WebAssembly. The page talks to a SCIRE server over HTTPS and JSON." width="860">
+</picture>
 
-    worker -. keeps the page and material on the device .-> page
-    page --> map
-    page --> engine
-    page --> py
-    engine --> ai
-    page <--> server
-    engine -. syncs progress when the connection returns .-> server
-```
+<sub>Logos from [Simple Icons](https://simpleicons.org) (CC0). Each logo is a trademark of its owner.</sub>
 
 ## License
 
