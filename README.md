@@ -54,6 +54,5 @@ Donne Martin (CC BY 4.0), pre-loaded as the default learning material. Learners 
 
 Copyright (c) 2026 Tojoarisoa. All rights reserved.
 
-This source is public so that it can be read. It is not licensed for reuse: it may not be copied, modified, redistributed or used in
-another project without the author's written permission. Third-party code in `dist/` stays under its own licenses, reproduced in the
-`THIRD-PARTY-LICENSES*.txt` files next to it.
+This source is public so that it can be read. No license is granted to it: see [LICENSE](LICENSE). Third-party code in `dist/` stays
+under its own licenses, reproduced in the `THIRD-PARTY-LICENSES*.txt` files next to it.

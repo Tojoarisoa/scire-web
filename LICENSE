@@ -1,0 +1,20 @@
+SCIRE web page
+
+Copyright (c) 2026 Tojoarisoa. All rights reserved.
+
+This source code is published so that it can be read. No license is granted to it.
+
+Without the author's prior written permission you may not copy, modify, merge, publish, distribute, sublicense, sell or otherwise use
+this code or any part of it: not in a product, a service or a derivative work, and not as material for training or evaluating a
+machine-learning model. Viewing it, and forking the repository on GitHub as GitHub's Terms of Service allow, do not grant any right to
+use it.
+
+Third-party code. The files in dist/ contain code written by other authors, each under its own license, reproduced in full in
+dist/THIRD-PARTY-LICENSES.txt and dist/THIRD-PARTY-LICENSES-offline-model.txt. This notice does not restrict that code: the rights to it
+are the ones those licenses give.
+
+Logos. The technology logos in assets/tech-stack-light.svg and assets/tech-stack-dark.svg come from Simple Icons (CC0 1.0). Each logo
+is a trademark of its owner.
+
+The software is provided "as is", without warranty of any kind, express or implied. The author is not liable for any claim, damages or
+other liability arising from it.
