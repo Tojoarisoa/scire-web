@@ -5,10 +5,15 @@
   </picture>
 </h1>
 
-The web page of SCIRE (Source-grounded Coaching Intelligence through Reverse Engineering): what a learner sees and runs in the browser.
+<p align="center"><strong>Source-grounded Coaching Intelligence through Reverse Engineering</strong></p>
 
-SCIRE teaches from a learner's own material, asks questions, grades practice and schedules reviews. This repository holds the part that
-runs in the browser. It talks to a SCIRE server over HTTP; the server is not part of this repository.
+*Scire* is Latin for "to know". SCIRE is an AI tutor that teaches from the material you bring: give it a repository, a book or your notes
+and it puts them in learning order, asks you questions and checks that you remember.
+
+It is for self-taught learners, students and developers who study from real material, and especially for anyone who wants to understand
+a software system by rebuilding it from scratch.
+
+This repository is SCIRE's web page, the part that runs in the browser. It works with a SCIRE server, which is not included here.
 
 ## The problem
 
