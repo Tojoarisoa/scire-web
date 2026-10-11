@@ -1,4 +1,9 @@
-# SCIRE web page
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/scire-logo-dark.svg">
+    <img src="assets/scire-logo-light.svg" alt="SCIRE" width="360">
+  </picture>
+</h1>
 
 The web page of SCIRE (Source-grounded Coaching Intelligence through Reverse Engineering): what a learner sees and runs in the browser.
 

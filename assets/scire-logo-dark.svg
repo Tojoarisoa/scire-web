@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 170" width="480" height="170" role="img" aria-labelledby="t d">
+  <title id="t">SCIRE</title>
+  <desc id="d">The SCIRE logo: the word SCIRE in slanted, stencil-cut letters that fade from cyan to magenta, between two corner brackets.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22d3ee"/><stop offset="0.5" stop-color="#e6e9f2"/><stop offset="1" stop-color="#d946ef"/>
+    </linearGradient>
+    <radialGradient id="f"><stop offset="0" stop-color="#fff" stop-opacity="0.95"/><stop offset="0.35" stop-color="#22d3ee" stop-opacity="0.8"/><stop offset="0.7" stop-color="#d946ef" stop-opacity="0.45"/><stop offset="1" stop-color="#d946ef" stop-opacity="0"/></radialGradient>
+  </defs>
+  <style>
+    .box { transform-box: fill-box; transform-origin: center; }
+    /* One intro, then it stands still: the brackets stretch out from the middle, a light leaves each corner, they meet
+       in a flash and the word appears. Without animation (or with reduced motion) only the finished logo shows. */
+    .tl { animation: tl 0.5s cubic-bezier(.15,.9,.3,1) both; }
+    .br { animation: br 0.5s cubic-bezier(.15,.9,.3,1) both; }
+    .sa { animation: sa 1.2s 0.5s cubic-bezier(.5,0,.9,.6) both; }
+    .sb { animation: sb 1.2s 0.5s cubic-bezier(.5,0,.9,.6) both; }
+    .flash { animation: flash 0.9s 1.7s ease-out both; }
+    .ring { animation: ring 0.8s 1.7s ease-out both; }
+    .word { animation: word 0.45s 1.7s ease-out both; }
+    @keyframes tl { from { transform: translate(212px, 56px); } to { transform: none; } }
+    @keyframes br { from { transform: translate(-212px, -56px); } to { transform: none; } }
+    @keyframes sa { 0% { transform: none; opacity: 1; } 99% { transform: translate(226px, 71px); opacity: 1; } 100% { transform: translate(226px, 71px); opacity: 0; } }
+    @keyframes sb { 0% { transform: none; opacity: 1; } 99% { transform: translate(-226px, -71px); opacity: 1; } 100% { transform: translate(-226px, -71px); opacity: 0; } }
+    @keyframes flash { from { opacity: 0.95; transform: scale(0.1); } to { opacity: 0; transform: scale(1); } }
+    @keyframes ring { from { opacity: 0.9; transform: scale(0.2); } to { opacity: 0; transform: scale(1); } }
+    @keyframes word { from { opacity: 0; } to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .tl, .br, .sa, .sb, .flash, .ring, .word { animation: none; } }
+  </style>
+  <ellipse class="box flash" cx="240" cy="85" rx="220" ry="70" fill="url(#f)" opacity="0"/>
+  <circle class="box ring" cx="240" cy="85" r="150" fill="none" stroke="url(#g)" stroke-width="3" opacity="0"/>
+  <g class="word" fill="none" stroke="url(#g)" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter" transform="translate(44 36) scale(3)">
+    <g transform="translate(5 0) skewX(-12)"><path d="M20 3H6L2 7V11L6 15H16L20 19V23L16 27H2"/><path transform="translate(28 0)" d="M20 3H6L2 7V23L6 27H20"/><path transform="translate(56 0)" d="M4 3H18M11 3V10M11 20V27M4 27H18"/><path transform="translate(84 0)" d="M2 27V3H16L20 7V11L16 15H2M10 15L20 27"/><path transform="translate(112 0)" d="M20 3H2V27H20M2 15H14"/></g>
+  </g>
+  <path class="tl" d="M14 44V14H44" fill="none" stroke="#22d3ee" stroke-width="5" stroke-linecap="square"/>
+  <path class="br" d="M466 126V156H436" fill="none" stroke="#d946ef" stroke-width="5" stroke-linecap="square"/>
+  <circle class="sa" cx="14" cy="14" r="6" fill="#22d3ee" opacity="0"/>
+  <circle class="sb" cx="466" cy="156" r="6" fill="#d946ef" opacity="0"/>
+</svg>
