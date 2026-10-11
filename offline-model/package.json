@@ -1,0 +1,9 @@
+{
+  "name": "tutor-offline-model",
+  "private": true,
+  "version": "1.0.0",
+  "description": "The optional on-device language model for the SCIRE page (WebLLM, WebGPU): bundled into ../dist so the page needs no CDN. Loaded only after a learner asks for it.",
+  "scripts": { "build": "node build.mjs" },
+  "dependencies": { "@mlc-ai/web-llm": "0.2.85" },
+  "devDependencies": { "esbuild": "^0.25.0" }
+}
