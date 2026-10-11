@@ -41,14 +41,28 @@ SCIRE turns the material a learner brings into a course that coaches them:
 SCIRE comes with one course ready to study: the public [System Design Primer](https://github.com/donnemartin/system-design-primer) by
 Donne Martin (CC BY 4.0), pre-loaded as the default learning material. Learners add their own next to it: a GitHub repository, files or notes.
 
-## Rebuilding a bundle
+## Tech stack
 
-```bash
-cd knowledge-map && npm ci && npm run build     # writes ../dist/knowledge-map.js
-cd offline-model && npm ci && npm run build     # writes ../dist/offline-model.js
+```mermaid
+flowchart TB
+    subgraph browser["In the browser"]
+        worker["<b>Service worker</b><br/>Cache Storage, Background Fetch"]
+        page["<b>The page</b><br/>Plain HTML, CSS and JavaScript<br/>No framework, no build step"]
+        map["<b>Progress map</b><br/>React 18 and React Flow<br/>bundled with esbuild"]
+        engine["<b>Offline engine</b><br/>ES modules: IndexedDB, search,<br/>practice, spaced repetition"]
+        py["<b>Try it in Python</b><br/>Pyodide"]
+        ai["<b>On-device AI</b><br/>WebLLM on WebGPU and WebAssembly<br/>bundled with esbuild"]
+    end
+    server["<b>SCIRE server</b><br/>HTTPS and JSON"]
+
+    worker -. keeps the page and material on the device .-> page
+    page --> map
+    page --> engine
+    page --> py
+    engine --> ai
+    page <--> server
+    engine -. syncs progress when the connection returns .-> server
 ```
-
-Commit the rebuilt `dist/` files together with the source change.
 
 ## License
 
