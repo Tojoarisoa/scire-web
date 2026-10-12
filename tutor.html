@@ -359,6 +359,7 @@
     .user-reset input { flex: 1; min-width: 0; }
     button.danger { color: var(--bad); }
     button.danger:hover { border-color: var(--bad); box-shadow: 0 0 12px var(--bad-soft); }
+    button.secondary.danger { color: var(--bad); border-color: var(--bad); }    /* "Remove", "Delete": the button that cannot be undone is red */
     .new-user { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; margin-top: 10px; }
     .new-user .config-field { flex: 1 1 150px; min-width: 120px; margin: 0; }
     .new-user .config-field:has(input[type=email]) { flex: 2 1 230px; }
@@ -1397,6 +1398,17 @@
         <p><strong>To start:</strong> create your account, then add material (a GitHub repository, files or notes). SCIRE shows each material's license: respect it.</p>
         <div class="prep-actions"><button type="button" class="btn-ico" id="welcome-start">Get started</button></div>
         <p class="legal-links" id="welcome-legal"><a href="/legal/terms" target="_blank" rel="noopener">Terms of use</a> · <a href="/legal/privacy" target="_blank" rel="noopener">Privacy policy</a> · <a href="/legal/copyright" target="_blank" rel="noopener">Copyright</a></p>
+      </section>
+    </div>
+
+    <div class="auth-overlay" id="confirm-overlay" hidden>
+      <section class="auth-card notice-card" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+        <h2 id="confirm-title"></h2>
+        <p class="notice-lead" id="confirm-text"></p>
+        <div class="prep-actions">
+          <button type="button" class="btn-ico" id="confirm-ok">Confirm</button>
+          <button type="button" class="secondary" id="confirm-cancel">Cancel</button>
+        </div>
       </section>
     </div>
 
@@ -2830,7 +2842,7 @@
     document.getElementById("learners-refresh").addEventListener("click", () => { learnersMessage(""); loadOverview(); });
     async function setRole(username, role) {
       const demotingMyself = role === "learner" && username === auth.user.username;
-      if (demotingMyself && !confirm("Make yourself a learner? You will lose the dashboard and get the learner tabs instead.")) return;
+      if (demotingMyself && !(await confirmAction({ title: "Make yourself a learner?", text: "You will lose the dashboard and get the learner tabs instead.", ok: "Make me a learner" }))) return;
       try {
         await callApi(`/admin/users/${encodeURIComponent(username)}/role`, {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role }),
@@ -2855,7 +2867,7 @@
       } catch (err) { learnersMessage(err.message, true); }
     }
     async function resetProgress(username) {
-      if (!confirm(`Reset all progress for ${username}? Their account stays. This can't be undone.`)) return;
+      if (!(await confirmAction({ title: `Reset progress for ${username}?`, text: "Their account stays. This can't be undone.", ok: "Reset progress", danger: true }))) return;
       try {
         const { cleared } = await callApi(`/admin/users/${encodeURIComponent(username)}/reset-progress`, { method: "POST" });
         await loadOverview();
@@ -2863,7 +2875,7 @@
       } catch (err) { learnersMessage(err.message, true); }
     }
     async function deleteUser(username) {
-      if (!confirm(`Delete ${username} and everything saved about them (practice history, reviews, pace)? This can't be undone.`)) return;
+      if (!(await confirmAction({ title: `Delete ${username}?`, text: "Everything saved about them goes: practice history, reviews and pace. This can't be undone.", ok: "Delete", danger: true }))) return;
       try {
         await callApi(`/admin/users/${encodeURIComponent(username)}`, { method: "DELETE" });
         await loadOverview();
@@ -3186,7 +3198,7 @@
       closeSwitcher();
       try {
         if (action === "remove") {
-          if (!confirm(`Remove "${s.title}"? Your practice history is kept; the material and study-path ticks go.`)) return;
+          if (!(await confirmAction({ title: `Remove "${s.title}"?`, text: "Your practice history is kept. The material and your study-path ticks go.", ok: "Remove", danger: true }))) return;
           await callApi(`/tutor/sources/${encodeURIComponent(s.id)}`, { method: "DELETE" });
           if (view.source === s.id) setActiveSource(null);
           toast("Removed.");
@@ -3323,6 +3335,28 @@
       $("model-licence").hidden = m.status === "unsupported";
     }
     // "Work offline" is only offered once the material is saved on the device, and with the AI missing it asks first.
+    // "Are you sure?", in the page. Never the browser's own confirm(): Chrome adds a "Suppress dialogs" button to those, and once it is tapped
+    // every later question is silently answered "no", so a learner could no longer remove a material that failed to load.
+    function confirmAction({ title, text, ok = "Confirm", danger = false }) {
+      return new Promise((resolve) => {
+        const overlay = $("confirm-overlay"), okBtn = $("confirm-ok"), cancelBtn = $("confirm-cancel");
+        const before = document.activeElement;
+        hideTip();                                     // the hint of the button that was clicked would otherwise hang over the question
+        $("confirm-title").textContent = title; $("confirm-text").textContent = text;
+        okBtn.textContent = ok; okBtn.className = danger ? "secondary danger" : "btn-ico";
+        overlay.hidden = false;
+        const done = (answer) => {
+          overlay.hidden = true;
+          okBtn.removeEventListener("click", yes); cancelBtn.removeEventListener("click", no); document.removeEventListener("keydown", key, true);
+          if (before && before.focus) { try { before.focus(); } catch (_) {} }
+          resolve(answer);
+        };
+        const yes = () => done(true), no = () => done(false);
+        const key = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); no(); } };
+        okBtn.addEventListener("click", yes); cancelBtn.addEventListener("click", no); document.addEventListener("keydown", key, true);
+        (danger ? cancelBtn : okBtn).focus();          // what cannot be undone starts on Cancel
+      });
+    }
     function askAboutAi(text) {
       return new Promise((resolve) => {
         $("ask-text").textContent = text;
@@ -3374,7 +3408,7 @@
       $("model-remove").addEventListener("click", () => off.model.remove());
       $("offline-remove").addEventListener("click", async () => {
         const waiting = off.status().pending;
-        if (waiting && !confirm(`${waiting} answer${waiting === 1 ? " is" : "s are"} not sent yet. Removing offline data deletes ${waiting === 1 ? "it" : "them"}. Remove anyway?`)) return;
+        if (waiting && !(await confirmAction({ title: "Remove the offline data?", text: `${waiting} answer${waiting === 1 ? " is" : "s are"} not sent yet. Removing the offline data deletes ${waiting === 1 ? "it" : "them"}.`, ok: "Remove anyway", danger: true }))) return;
         await off.removeData();
         setStatus("Offline data removed from this device.");
       });
@@ -3904,7 +3938,7 @@
     $("hint-btn").addEventListener("click", async () => {
       if (!currentQuestionId || practiceState.revealed) return;
       const level = practiceState.hints + 1;
-      if (level === 3 && !confirm("Show the answer? It counts as a miss, so this topic comes back for review soon.")) return;
+      if (level === 3 && !(await confirmAction({ title: "Show the answer?", text: "It counts as a miss, so this topic comes back for review soon.", ok: "Show the answer" }))) return;
       try {
         const h = await callApi("/tutor/practice/hint", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question_id: currentQuestionId, level }) });
         practiceState.hints = level;
