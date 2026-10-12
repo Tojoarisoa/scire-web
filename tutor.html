@@ -1145,6 +1145,17 @@
     .stage-h span:nth-child(2) { flex: 1; }
 
     .appbar .src-name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* A long sentence must never widen the page. A box may be narrower than its text, which then wraps or is cut with an ellipsis. Without this,
+       a phone's browser makes the whole page as wide as the longest line and zooms out to fit it: the header shrinks while the bottom bar,
+       which is fixed to the screen, stays the width of the screen. */
+    .col-side, .next-card { grid-template-columns: minmax(0, 1fr); }        /* the side column's one track is the width of the column, not of its longest line */
+    .rail-list { grid-template-columns: minmax(0, 1fr); }
+    .rail-list > li, .next-main > div, .card-h > * { min-width: 0; }
+    .rail-btn { max-width: 100%; }
+    /* The last resort, for a wide thing nobody thought of: it is cut at the edge of the screen instead of widening the page. (clip, not hidden:
+       hidden would make the body a scroll container and break the sticky header.) A code block or a table scrolls inside its own box. */
+    html, body { overflow-x: clip; }
   </style>
 </head>
 <body class="booting">
