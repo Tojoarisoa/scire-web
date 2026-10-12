@@ -906,12 +906,56 @@
       .appbar .tab.active { border-top-color: var(--accent); border-bottom-color: transparent; background: linear-gradient(to bottom, var(--accent-soft), transparent 80%); box-shadow: none; }
       .appbar { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--bg); }
       .shell { padding-bottom: 100px; }
-      .appbar .account #account-name, .appbar .account .role-badge { display: none; }
       .quick { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
     @media (max-width: 1480px) { .appbar .conn #conn-text { display: none; } .appbar .tab { padding: 0 10px; gap: 6px; } }
     @media (max-width: 1200px) and (min-width: 721px) { .appbar .tab .tab-label { display: none; } .appbar .tab { padding: 0 12px; } }
     footer { display: none; }
+
+    /* The header leads with the first step. Right side, from the logo: Add material (the call to action), one word of status, the learner's initial.
+       The initial opens the account menu: name, status, Settings, theme, Sign out. */
+    .appbar-actions { gap: 10px; }
+    .source-btn.add-cta {
+      max-width: none; height: 42px; padding: 0 16px; gap: 9px; font-size: 0.92rem; font-weight: 700; letter-spacing: 0;
+      background: var(--accent); color: var(--accent-text); border-color: var(--accent); border-radius: var(--radius-soft);
+    }
+    .source-btn.add-cta:hover { background: var(--accent-hover); border-color: var(--accent-hover); box-shadow: 0 0 16px var(--accent-glow); }
+    .source-btn.add-cta .ico { color: inherit; }
+    .source-btn.add-cta .src-name { overflow: visible; }
+    .avatar-btn { display: inline-grid; place-items: center; width: 42px; height: 42px; padding: 0; background: transparent; border: 1px solid transparent; border-radius: 50%; box-shadow: none; cursor: pointer; }
+    .avatar-btn:hover { background: var(--surface-muted); box-shadow: none; }
+    .avatar-btn[aria-expanded="true"] { background: var(--accent-soft); }
+    .avatar-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .appbar .account { position: relative; gap: 0; }
+    .avatar.big { width: 40px; height: 40px; font-size: 1rem; }
+    .account-menu { right: 0; left: auto; top: 50px; width: min(320px, calc(100vw - 28px)); padding: 0; gap: 0; overflow: hidden; }
+    .am-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .am-who { display: grid; gap: 4px; min-width: 0; font: 600 0.95rem var(--font-ui); color: var(--text); }
+    .am-who > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .am-who .role-badge { justify-self: start; }
+    .am-status { padding: 12px 16px; border-bottom: 1px solid var(--border); display: grid; gap: 6px; }
+    .am-status .conn { text-transform: none; letter-spacing: 0; font: 600 0.88rem var(--font-ui); color: var(--text); justify-content: flex-start; text-align: left; }
+    .am-status .conn-wrap { display: flex; }
+    .appbar .am-status .conn #conn-text { display: inline; }
+    .am-status .conn .dot { position: static; }
+    .am-status .conn-tip { position: static; width: auto; max-width: none; padding: 0; border: none; background: none; box-shadow: none; opacity: 1; visibility: visible; transform: none; pointer-events: auto; font: 0.8rem/1.5 var(--font-ui); }
+    .am-status .conn-tip .k { text-transform: none; letter-spacing: 0; font-size: 0.78rem; margin-top: 6px; }
+    .am-status .conn-tip .hint { display: none; }
+    .am-note { margin: 0; color: var(--text-muted); font-size: 0.82rem; line-height: 1.45; }
+    .account-menu > .menu-item { border-radius: 0; padding: 12px 16px; }
+    .account-menu > .menu-item + .menu-item { border-top: 1px solid var(--border); }
+    #signout-btn { color: var(--bad); }
+    details.settings > summary { display: none; }
+    details.settings { margin-left: -10px; }
+
+    /* Home: the first block guides a learner who has only the pre-loaded material. */
+    .start-card { margin-bottom: 18px; border-color: var(--accent); background: linear-gradient(to bottom, var(--accent-soft), transparent 70%), var(--surface); }
+    .start-card[hidden] { display: none; }
+    .start-card h2 { margin: 0 0 6px; font-size: 1.1rem; color: var(--text); text-transform: none; letter-spacing: 0; font-family: var(--font-ui); }
+    .start-card p { margin: 0; color: var(--text-muted); font-size: 0.92rem; line-height: 1.5; max-width: 62ch; }
+    .start-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .start-actions button { max-width: 100%; text-transform: none; letter-spacing: 0; font-family: var(--font-ui); font-size: 0.9rem; }
+    .menu-label { padding: 8px 10px 2px; color: var(--text-faint); font: 700 0.7rem var(--font-ui); letter-spacing: 0.04em; }
 
     /* Pinch zoom on a phone moves the visible area around inside the page, and a bar fixed to the page is left half or wholly out of sight.
        While the page is zoomed in (the script below sets .pinched and the --vv values), the header and the bottom bar are pinned to what can be
@@ -949,7 +993,7 @@
     .menu-row:hover .menu-tools, .menu-row:focus-within .menu-tools { opacity: 1; }
     @media (hover: none) { .menu-tools { opacity: 1; } }
     @media (max-width: 720px) {
-      .source-btn .src-name { display: none; } .source-btn { padding: 6px 8px; }
+      .source-btn:not(.add-cta) .src-name { display: none; } .source-btn:not(.add-cta) { padding: 6px 8px; }
       /* on a phone the list is pinned to the screen's edges (its top is set when it opens), so no row can sit off-screen */
       #source-menu { position: fixed; left: 14px; right: 14px; width: auto; top: 56px; max-height: calc(100dvh - 72px); overflow-y: auto; }
     }
@@ -1008,15 +1052,19 @@
     .prep-error { margin: 8px 0 0; text-align: center; color: var(--bad); font-size: 0.88rem; }
     .prep-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
     /* Offline and online: a calm chip beside the connection pill, and a plain notice before first use online. */
-    .mode-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-muted); color: var(--text-muted); font: 600 0.74rem var(--font-mono); text-transform: none; letter-spacing: 0; cursor: pointer; white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 0; max-width: 100%; flex: 0 1 auto; }
+    .mode-chip { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-muted); color: var(--text-muted); font: 600 0.74rem var(--font-mono); text-transform: none; letter-spacing: 0; cursor: pointer; white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 0; max-width: 100%; flex: 0 1 auto; }
     .mode-short { display: none; }
-    @media (max-width: 720px) { .mode-long { display: none; } .mode-short { display: inline; } .mode-chip { padding: 3px 7px; } }
+    @media (max-width: 720px) { .mode-long { display: none; } .mode-short { display: inline; } }
     /* A phone: the bar is too narrow for the logo, the switcher, the status and the account side by side (it ran 60px off the
        screen, taking sign-out and Settings with it), so the mode chip takes a row of its own under the buttons. */
     @media (max-width: 560px) {
-      .appbar-in { flex-wrap: wrap; row-gap: 2px; padding-top: 4px; padding-bottom: 6px; }
-      .appbar-actions { flex: 1 1 0; min-width: 0; flex-wrap: wrap; justify-content: flex-end; row-gap: 4px; }
-      .appbar .mode-chip { order: 20; flex: 1 0 100%; justify-content: center; max-width: none; padding: 4px 10px; }
+      .appbar-in { flex-wrap: wrap; row-gap: 6px; padding-top: 6px; padding-bottom: 10px; }
+      .appbar-actions { display: contents; }
+      .brand-link { order: 0; }
+      .appbar .account { order: 1; margin-left: auto; }
+      .source-switch { order: 2; flex: 1 1 210px; min-width: 0; }
+      .source-btn.add-cta { width: 100%; justify-content: center; }
+      .appbar .mode-chip { order: 3; flex: none; padding: 6px 12px; }
     }
     .mode-chip[hidden] { display: none; }
     .mode-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--text-faint); }
@@ -1192,21 +1240,31 @@
       </div>
       <div class="appbar-actions">
         <div class="source-switch" id="source-switch" hidden>
-          <button type="button" class="source-btn" id="source-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Choose what to study" data-tip="What you are studying"></button>
+          <button type="button" class="source-btn add-cta" id="source-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Add material, or choose what to study" data-tip="Add material, or choose what you study"></button>
           <div class="menu" id="source-menu" role="menu" hidden></div>
         </div>
-        <span class="conn-wrap">
-          <button type="button" class="conn checking" id="conn-pill" aria-describedby="conn-tip">
-            <span class="dot" aria-hidden="true"></span><span id="conn-text">Checking…</span>
-          </button>
-          <div class="conn-tip" id="conn-tip" role="tooltip"></div>
-        </span>
-        <button type="button" class="mode-chip" id="mode-chip" hidden aria-label="Offline or online mode: open the explanation" data-tip=""><span id="mode-chip-text"><span class="mode-long"></span><span class="mode-short"></span></span></button>
+        <button type="button" class="mode-chip" id="mode-chip" hidden aria-label="Online. Open the status." data-tip=""><span id="mode-chip-text"><span class="mode-long"></span><span class="mode-short"></span></span></button>
         <span class="account" id="account-chip" hidden>
-          <span class="avatar" id="account-avatar" aria-hidden="true"></span>
-          <span id="account-name"></span><span class="role-badge" id="account-role"></span>
-          <button type="button" class="icon-btn theme-btn" id="theme-btn" aria-label="Switch to light mode" data-tip="Switch to light mode"><span data-icon="sun"></span></button>
-          <button type="button" class="icon-btn" id="signout-btn" aria-label="Sign out" data-tip="Sign out"><span data-icon="logout"></span></button>
+          <button type="button" class="avatar-btn" id="account-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="account-menu" aria-label="Your account" data-tip="Your account"><span class="avatar" id="account-avatar" aria-hidden="true"></span></button>
+          <div class="menu account-menu" id="account-menu" role="menu" aria-label="Your account" hidden>
+            <div class="am-head">
+              <span class="avatar big" id="account-avatar-big" aria-hidden="true"></span>
+              <span class="am-who"><span id="account-name"></span><span class="role-badge" id="account-role"></span></span>
+            </div>
+            <div class="am-status" id="am-status" aria-live="polite">
+              <span class="conn-wrap">
+                <button type="button" class="conn checking" id="conn-pill" aria-describedby="conn-tip">
+                  <span class="dot" aria-hidden="true"></span><span id="conn-text">Checking…</span>
+                </button>
+              </span>
+              <div class="conn-tip" id="conn-tip" role="note"></div>
+              <p class="am-note" id="am-credit" hidden></p>
+              <p class="am-note" id="am-device" hidden></p>
+            </div>
+            <button type="button" class="menu-item" id="open-settings" role="menuitem"><span data-icon="gear"></span><span class="grow">Settings</span></button>
+            <button type="button" class="menu-item theme-btn" id="theme-btn" role="menuitem" aria-label="Switch to light mode"><span class="mi-ico" data-icon="sun"></span><span class="grow mi-text">Switch to light mode</span></button>
+            <button type="button" class="menu-item" id="signout-btn" role="menuitem"><span data-icon="logout"></span><span class="grow">Sign out</span></button>
+          </div>
         </span>
     <details class="settings">
       <summary aria-label="Settings" data-tip="Settings"><span data-icon="gear"></span></summary>
@@ -1492,6 +1550,14 @@
       <h2 class="sr-only">Home</h2>
       <div class="view-grid">
         <div class="col-main">
+          <article class="card start-card" id="start-card" aria-labelledby="start-title" hidden>
+            <h2 id="start-title">Start with your own material</h2>
+            <p id="start-text"></p>
+            <div class="start-actions">
+              <button type="button" class="btn-ico" id="start-add"><span data-icon="plus" data-icon-class="sm"></span>Add material</button>
+              <button type="button" class="secondary" id="start-keep"></button>
+            </div>
+          </article>
           <article class="card next-card" id="next-card" aria-live="polite"></article>
           <div class="quick" id="home-quick" style="margin-top:18px"></div>
           <article class="card">
@@ -2076,10 +2142,7 @@
           // A learner's view: is it up and is the model usable, nothing about how it is run.
           const state = data.model_state;
           const modelDown = state === "unavailable";
-          setTip([
-            ["Status", "The tutor is up"],
-            ["Language model", state === "none" ? "none (simple Socratic prompts, word-match grading)" : modelDown ? "not available right now, ask an admin" : "ready"],
-          ]);
+          setTip([["AI", state === "none" ? "Not set up: simple questions, graded by matching words" : modelDown ? "Not available right now, ask an admin" : "Ready"]]);
           if (modelDown) {
             connPill.classList.add("error"); connPill.classList.remove("ok");
             connText.textContent = "Model unavailable";
@@ -2466,6 +2529,9 @@
         document.getElementById("account-name").textContent = auth.user.username;
         document.getElementById("account-role").textContent = auth.user.role;
         document.getElementById("account-avatar").textContent = auth.user.username.slice(0, 1);
+        document.getElementById("account-avatar-big").textContent = auth.user.username.slice(0, 1);
+        const who = `Your account, ${auth.user.username}`;
+        $("account-btn").setAttribute("aria-label", who); $("account-btn").setAttribute("data-tip", who);
       }
     }
 
@@ -2992,11 +3058,16 @@
     function themeNow() { return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark"; }
     function paintThemeButtons() {
       const light = themeNow() === "light";
+      const label = light ? "Switch to dark mode" : "Switch to light mode";
       for (const id of ["theme-btn", "theme-float"]) {
         const b = document.getElementById(id);
-        const label = light ? "Switch to dark mode" : "Switch to light mode";
         b.setAttribute("aria-label", label); b.setAttribute("data-tip", label);
-        b.replaceChildren(el("span")); b.firstChild.innerHTML = ico(light ? "moon" : "sun");
+        const words = b.querySelector(".mi-text");
+        if (words) {                                      // the row in the account menu: the icon and the words
+          words.textContent = label;
+          const icon = b.querySelector(".mi-ico");
+          icon.replaceChildren(); icon.insertAdjacentHTML("afterbegin", ico(light ? "moon" : "sun"));
+        } else { b.replaceChildren(el("span")); b.firstChild.innerHTML = ico(light ? "moon" : "sun"); }
       }
       const meta = document.querySelector('meta[name="theme-color"]');
       if (meta) meta.setAttribute("content", light ? "#eef1f6" : "#070a12");
@@ -3179,8 +3250,10 @@
     function renderSwitcher() {
       const active = view.sources.find((s) => s.id === view.source);
       const pending = view.sources.some((s) => PENDING.includes(s.status));
-      $("source-btn").innerHTML = `${ico(active ? KIND_ICON[active.kind] || "layers" : "layers")}<span class="src-name">${escapeHtml(active ? active.title : view.course === false ? "Add material" : "Course")}</span>${pending ? ico("loader", "spin sm") : ico("chevron", "sm")}`;
-      $("source-btn").setAttribute("data-tip", active ? `Studying: ${active.title}` : view.course === false ? "Add your own material." : "Studying the built-in course. Switch or add your own material.");
+      $("source-btn").innerHTML = `${ico("plus")}<span class="src-name">Add material</span>${pending ? ico("loader", "spin sm") : ico("chevron", "sm")}`;
+      const studying = active ? `Studying: ${active.title}. ` : "";
+      $("source-btn").setAttribute("data-tip", `${studying}Add material, or choose what you study.`);
+      $("source-btn").setAttribute("aria-label", `Add material, or choose what to study. ${studying}`.trim());
       const menu = $("source-menu");
       menu.replaceChildren();
       const row = (id, icon, title, extra, onPick) => {
@@ -3191,6 +3264,11 @@
         li.append(btn);
         return li;
       };
+      const add = el("button", "menu-item add"); add.type = "button"; add.setAttribute("role", "menuitem");
+      add.innerHTML = `${ico("plus")}<span class="grow">Add material</span>`;
+      add.addEventListener("click", () => { closeSwitcher(); openAdd(); });
+      menu.append(add);
+      if (view.sources.length || view.course !== false) menu.append(el("div", "menu-label", "Studying"));
       if (view.course !== false) menu.append(row("", "layers", "Course"));
       for (const s of view.sources) {
         const state = PENDING.includes(s.status) ? `<span class="chip" data-tip="${escapeHtml(s.work ? s.work.label : "Waiting for its turn")}">${Math.round((s.work && s.work.percent) || 0)}%</span>` : s.status === "failed" ? `<span class="chip warn" data-tip="${escapeHtml(s.error || "Could not be prepared")}">${ico("alert", "sm")}</span>` : "";
@@ -3201,12 +3279,25 @@
         li.append(tools);
         menu.append(li);
       }
-      const add = el("button", "menu-item add"); add.type = "button";
-      add.innerHTML = `${ico("plus")}<span class="grow">Add material</span>`;
-      add.addEventListener("click", () => { closeSwitcher(); openAdd(); });
-      menu.append(add);
       renderNoMaterial();
+      renderStartGuide();
     }
+    // Home's first block: a learner who has only the pre-loaded material is guided to add their own, or to keep the pre-loaded one.
+    const startKey = () => `scire_start_${auth.user ? auth.user.username : ""}`;
+    const friendly = (title) => String(title || "").split("/").pop().replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    function renderStartGuide() {
+      const card = $("start-card");
+      const preloaded = view.sources.find((s) => s.default);
+      const own = view.sources.some((s) => !s.default);
+      let done = false; try { done = localStorage.getItem(startKey()) === "1"; } catch (_) {}
+      card.hidden = !(isLearner() && preloaded && !own && !done);
+      if (card.hidden) return;
+      const name = friendly(preloaded.title);
+      $("start-text").textContent = `Add a GitHub repository, files or notes and SCIRE turns them into a course. Or keep studying ${name}, which comes with SCIRE.`;
+      $("start-keep").textContent = `Keep using ${name}`;
+    }
+    $("start-add").addEventListener("click", () => openAdd());
+    $("start-keep").addEventListener("click", () => { try { localStorage.setItem(startKey(), "1"); } catch (_) {} renderStartGuide(); });
     // With no course and nothing of their own (not even something being prepared), a learner is shown the one thing to do.
     function renderNoMaterial() {
       const empty = isLearner() && view.course === false && !view.sources.some((s) => s.status === "ready" || PENDING.includes(s.status));
@@ -3222,6 +3313,7 @@
     function closeSwitcher() { $("source-menu").hidden = true; $("source-btn").setAttribute("aria-expanded", "false"); }
     $("source-btn").addEventListener("click", (e) => {
       e.stopPropagation();
+      closeAccount(); hideTip();
       const open = $("source-menu").hidden;
       $("source-menu").hidden = !open;
       if (open) $("source-menu").style.top = Math.round($("source-btn").getBoundingClientRect().bottom + 8) + "px";
@@ -3295,26 +3387,26 @@
       if (!m) return;
       const online = m.mode === "online";
       const left = l && l.ai && l.ai.limited && l.ai.left !== null ? l.ai.left : null;
-      const out = online && left === 0;
       const resting = online && m.ai && m.ai.resting;
-      chip.className = `mode-chip ${online ? "online" : "offline"}${out || resting ? " out" : left !== null && l.ai.per_user_day && left <= Math.ceil(l.ai.per_user_day / 5) ? " low" : ""}`;
-      const [long, short] = !online ? ["Offline", "Offline"] : out ? ["Online, AI answers used up", "Online, no AI left"] : resting ? ["Online, AI resting", "Online, AI resting"] : left !== null ? [`Online, ${left} AI answers left`, `Online, ${left} left`] : ["Online", "Online"];
       const dev = window.ScireOffline ? window.ScireOffline.status() : null;
-      let [shownLong, shownShort] = [long, short];
-      if (dev && online) {   // the deployment is online; this device may or may not be
-        const waiting = dev.pending > 0 ? `${dev.pending} to sync` : "";
-        if (dev.mode === "offline") { shownLong = `Offline on this device${waiting ? `, ${waiting}` : ""}`; shownShort = `Offline${dev.pending ? `, ${dev.pending}` : ""}`; chip.classList.add("device"); chip.classList.remove("out", "low"); }
-        else if (waiting) { shownLong = `${long}, ${waiting}`; shownShort = `${short}, ${dev.pending}`; }
-      }
-      const note = $("mode-note"), away = !!(dev && online && dev.mode === "offline");
+      const away = !!(dev && online && dev.mode === "offline");        // the deployment is online; this device is not
+      // The header says one word. What there is to know (the AI, the answers left, what waits to sync) is in the account menu.
+      chip.className = `mode-chip ${online && !away ? "online" : "offline"}${away ? " device" : ""}`;
+      const word = online && !away ? "Online" : "Offline";
+      document.querySelector("#mode-chip-text .mode-long").textContent = word;
+      document.querySelector("#mode-chip-text .mode-short").textContent = word;
+      chip.setAttribute("aria-label", `${word}. Open the status.`);
+      chip.setAttribute("data-tip", `${word}. Status, and the AI.`);
+      const note = $("mode-note");
       note.hidden = !away;
       if (away) note.textContent = `${dev.manual ? "Working offline, as you chose." : "You are offline."} Your answers are saved here and sent later. ${dev.model && dev.model.status === "ready" ? "The AI on this device writes answers." : "Answers come from your material."}`;
-      document.querySelector("#mode-chip-text .mode-long").textContent = shownLong;
-      document.querySelector("#mode-chip-text .mode-short").textContent = shownShort;
-      chip.setAttribute("aria-label", `${shownLong}. Open the explanation.`);
+      const credit = online ? (resting ? "AI is resting. Answers come from your material for now." : limitsLine(l)) : "";
+      $("am-credit").textContent = credit; $("am-credit").hidden = !credit;
+      const waiting = dev && dev.pending > 0 ? `${dev.pending} answer${dev.pending === 1 ? " is" : "s are"} waiting to be sent.` : "";
+      const deviceLine = [away ? (dev.manual ? "Working offline, as you chose." : "This device is offline.") : "", waiting].filter(Boolean).join(" ");
+      $("am-device").textContent = deviceLine; $("am-device").hidden = !deviceLine;
       const explainOffline = "Offline mode: SCIRE runs on your own computer. Nothing you add or ask leaves it.";
       const explainOnline = `Online. ${m.privacy && m.privacy.notice ? m.privacy.notice : "Answers come from your material."}`;
-      chip.setAttribute("data-tip", dev && online && dev.mode === "offline" ? "Offline on this device. Answers are saved and sent later." : online ? `${limitsLine(l) || "Online."}` : "Offline mode: everything stays on your computer.");
       $("mode-explain").textContent = online ? explainOnline : explainOffline;
       $("mode-quota").textContent = online ? (resting ? "AI is resting. Answers come from your material for now." : limitsLine(l)) : "";
       const meter = $("mode-meter");
@@ -3502,7 +3594,18 @@
       const d = document.querySelector("details.settings");
       if (d) { d.open = true; const section = $("offline-use").hidden ? $("mode-settings") : $("offline-use"); section.scrollIntoView({ block: "nearest" }); }
     });
-    $("mode-chip").addEventListener("click", () => { const d = document.querySelector("details.settings"); if (d) { d.open = true; $("mode-settings").scrollIntoView({ block: "nearest" }); } });
+    // The account menu: the initial opens it; the status word beside the initial opens it too, because the status is in it.
+    function closeAccount() { $("account-menu").hidden = true; $("account-btn").setAttribute("aria-expanded", "false"); }
+    function openAccount() {
+      closeSwitcher(); hideTip();
+      const d = document.querySelector("details.settings"); if (d) d.open = false;
+      $("account-menu").hidden = false; $("account-btn").setAttribute("aria-expanded", "true");
+    }
+    $("account-btn").addEventListener("click", (e) => { e.stopPropagation(); if ($("account-menu").hidden) openAccount(); else closeAccount(); });
+    $("mode-chip").addEventListener("click", (e) => { e.stopPropagation(); openAccount(); });
+    document.addEventListener("click", (e) => { if (!e.target.closest("#account-chip") && !e.target.closest("#mode-chip")) closeAccount(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("account-menu").hidden) { closeAccount(); $("account-btn").focus(); } });
+    $("open-settings").addEventListener("click", () => { closeAccount(); const d = document.querySelector("details.settings"); if (d) d.open = true; });
 
     // --- Preparing material: a stepped loader ---
     const prep = { id: null, said: "", detail: null };
