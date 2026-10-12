@@ -947,6 +947,8 @@
     #signout-btn { color: var(--bad); }
     details.settings > summary { display: none; }
     details.settings { margin-left: -10px; }
+    /* The settings open as a sheet that fits the screen, and what does not fit scrolls inside it */
+    details.settings > .config { position: fixed; left: 12px; right: 12px; top: 12px; width: auto; max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }
 
     /* Home: the first block guides a learner who has only the pre-loaded material. */
     .start-card { margin-bottom: 18px; border-color: var(--accent); background: linear-gradient(to bottom, var(--accent-soft), transparent 70%), var(--surface); }
