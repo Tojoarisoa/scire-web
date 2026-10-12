@@ -72,11 +72,21 @@ export function gradeHeuristic(question, submitted) {
   return { score, passed, feedback, backend: "heuristic" };
 }
 
+// Where a passage is, as a learner would say it: the file (with its folder when the file is only a README or index), without the
+// prefix the material is stored under or a long folder path.
+export function placeOf(sourcePath) {
+  let parts = String(sourcePath).split("/").filter(Boolean);
+  if (parts.length > 3 && (parts[0] === "gh" || parts[0] === "up")) parts = parts.slice(3);
+  if (!parts.length) return sourcePath;
+  const last = parts[parts.length - 1], stem = (last.includes(".") ? last.slice(0, last.lastIndexOf(".")) : last).toLowerCase();
+  return (stem === "readme" || stem === "index") && parts.length > 1 ? `${parts[parts.length - 2]}/${last}` : last;
+}
+
 // make_hint: 1 where to look, 2 the shape of the answer, 3 the answer itself.
 export function makeHint(question, level) {
   const title = question.topic.includes(TOPIC_SEP) ? question.topic.slice(question.topic.indexOf(TOPIC_SEP) + TOPIC_SEP.length) : question.topic;
   level = Math.max(1, Math.min(Math.trunc(level), 3));
-  if (level === 1) return { level: 1, kind: "where", text: `Look at "${title}" in ${question.source_path}.` };
+  if (level === 1) return { level: 1, kind: "where", text: `Look at "${title}" in ${placeOf(question.source_path)}.` };
   const key = (question.answer_key || "").trim();
   if (level === 3 || !key) return { level: 3, kind: "answer", text: key || "(no model answer for this one)", reveals: true };
   const words = key.split(/\s+/);

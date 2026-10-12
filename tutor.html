@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>SCIRE</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%230b0f19'/%3E%3Cg%20fill='none'%20stroke-width='8'%20stroke-linecap='square'%20stroke-linejoin='miter'%3E%3Cpath%20d='M17%2031V17H31'%20stroke='%2322d3ee'/%3E%3Cpath%20d='M47%2033V47H33'%20stroke='%23d946ef'/%3E%3C/g%3E%3C/svg%3E" />
   <meta name="theme-color" content="#070a12" />
@@ -900,12 +900,12 @@
     @media (max-width: 720px) {
       .appbar .tabs {
         position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 50; justify-content: space-around; gap: 0;
-        background: var(--surface); border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom);
+        background: var(--surface); border-top: 1px solid var(--border); padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
       }
       .appbar .tab { flex: 1; flex-direction: column; justify-content: center; gap: 3px; height: 58px; padding: 0 4px; font-size: 0.68rem; letter-spacing: 0; border-bottom: none; border-top: 2px solid transparent; }
       .appbar .tab.active { border-top-color: var(--accent); border-bottom-color: transparent; background: linear-gradient(to bottom, var(--accent-soft), transparent 80%); box-shadow: none; }
       .appbar { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--bg); }
-      .shell { padding-bottom: 100px; }
+      .shell { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
       .quick { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
     @media (max-width: 1480px) { .appbar .conn #conn-text { display: none; } .appbar .tab { padding: 0 10px; gap: 6px; } }
@@ -1823,14 +1823,19 @@
     // Uses innerHTML (not textContent) so icon-bearing buttons (the tabs
     // don't use this, but future ones might) restore their markup intact.
     async function withLoading(button, label, fn) {
-      const original = button.innerHTML;
+      // Two requests can overlap on one button (a second topic chosen while the first loads): the markup to put back is the one from before
+      // the first started, never the spinner, and the button comes back only when the last one is done.
+      const busy = Number(button.dataset.busy || 0);
+      if (!busy) button._original = button.innerHTML;
+      button.dataset.busy = String(busy + 1);
       button.disabled = true;
       if (label) button.innerHTML = label;
       try {
         return await fn();
       } finally {
-        button.disabled = false;
-        button.innerHTML = original;
+        const left = Number(button.dataset.busy) - 1;
+        if (left > 0) button.dataset.busy = String(left);
+        else { delete button.dataset.busy; button.disabled = false; button.innerHTML = button._original; }
       }
     }
 
@@ -4444,7 +4449,7 @@
     const practicePrompt = document.getElementById("practice-prompt");
     const practiceGradeForm = document.getElementById("practice-grade-form");
     const practiceResult = document.getElementById("practice-result");
-    let currentQuestionId = null;
+    let currentQuestionId = null, practiceAsked = 0;
 
     async function generatePractice(topic, button) {
       practicePrompt.style.display = "none";
@@ -4456,11 +4461,13 @@
       document.getElementById("practice-submitted").value = "";
       resetAnswerControls();
       practiceState.topic = topic;
+      const asked = ++practiceAsked;
       const data = await withLoading(button, SPINNER, () => callApi("/tutor/practice/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topic, source: view.source, difficulty: "auto" }),
       }));
+      if (asked !== practiceAsked) return data;   // another topic was chosen meanwhile: that answer is the one to show
       currentQuestionId = data.id;
       currentRunContext = data.run_context || null;
       renderTutorText(practicePrompt, data.prompt);
