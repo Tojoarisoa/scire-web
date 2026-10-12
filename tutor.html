@@ -913,6 +913,15 @@
     @media (max-width: 1200px) and (min-width: 721px) { .appbar .tab .tab-label { display: none; } .appbar .tab { padding: 0 12px; } }
     footer { display: none; }
 
+    /* Pinch zoom on a phone moves the visible area around inside the page, and a bar fixed to the page is left half or wholly out of sight.
+       While the page is zoomed in (the script below sets .pinched and the --vv values), the header and the bottom bar are pinned to what can be
+       seen: as wide as the screen, as big as before the zoom (a scale of 1 / zoom), at its top and its bottom edge. Zoomed out: none of this applies. */
+    html.pinched .appbar { transform: translate(var(--vv-x), var(--vv-y)) scale(var(--vv-k)); transform-origin: 0 0; }
+    @media (max-width: 720px) {
+      /* a transformed header is what a fixed child is placed against, so the tab bar is placed inside it, at the visible bottom (the script gives the top) */
+      html.pinched .appbar .tabs { position: absolute; left: 0; right: auto; bottom: auto; width: var(--vv-lw); top: var(--vv-tabs-top); }
+    }
+
     /* Source switcher, menus, the add-material dialog */
     .source-switch { position: relative; }
     .source-btn {
@@ -2991,6 +3000,30 @@
     }
     hydrateIcons();
     paintThemeButtons();
+
+    // Pinch zoom: keep the header and the bottom bar on the screen (see the .pinched rules). The visual viewport is the part of the page that is
+    // visible; when it is smaller than the page the page is zoomed in. Applied only then, and undone as soon as the zoom is back to normal.
+    (function pinBarsToTheScreen() {
+      const vv = window.visualViewport;
+      if (!vv) return;
+      const root = document.documentElement, set = (k, v) => root.style.setProperty(k, v);
+      let queued = false;
+      function apply() {
+        queued = false;
+        if (vv.scale <= 1.02) {
+          if (root.classList.contains("pinched")) { root.classList.remove("pinched"); for (const k of ["--vv-x", "--vv-y", "--vv-k", "--vv-lw", "--vv-tabs-top"]) root.style.removeProperty(k); }
+          return;
+        }
+        const tabs = document.querySelector(".appbar .tabs"), tabsHeight = tabs ? tabs.offsetHeight : 0;
+        set("--vv-x", `${vv.offsetLeft}px`); set("--vv-y", `${vv.offsetTop}px`); set("--vv-k", String(1 / vv.scale));
+        set("--vv-lw", `${root.clientWidth}px`);
+        set("--vv-tabs-top", `${window.innerHeight - tabsHeight}px`);   // in the header's own (scaled) coordinates, the bottom of the screen is the unzoomed height
+        root.classList.add("pinched");
+      }
+      const queue = () => { if (!queued) { queued = true; requestAnimationFrame(apply); } };
+      vv.addEventListener("resize", queue); vv.addEventListener("scroll", queue); window.addEventListener("resize", queue); window.addEventListener("scroll", queue, { passive: true });
+      queue();
+    })();
 
     // --- Tooltips: hover, keyboard focus, or a click/tap. One element, positioned beside whatever asked. ---
     const tipEl = document.createElement("div");
