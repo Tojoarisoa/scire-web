@@ -1153,6 +1153,11 @@
     .rail-list { grid-template-columns: minmax(0, 1fr); }
     .rail-list > li, .next-main > div, .card-h > * { min-width: 0; }
     .rail-btn { max-width: 100%; }
+    /* Hints and the answer: code has long names with no space to break at. The box is the width of its column and the text goes on to the next line,
+       breaking inside a long word when it has to, so nothing runs off the screen. */
+    .hint-list { grid-template-columns: minmax(0, 1fr); }
+    .hint-list li { min-width: 0; }
+    .hint-list li > span { min-width: 0; overflow-wrap: anywhere; }
     /* The last resort, for a wide thing nobody thought of: it is cut at the edge of the screen instead of widening the page. (clip, not hidden:
        hidden would make the body a scroll container and break the sticky header.) A code block or a table scrolls inside its own box. */
     html, body { overflow-x: clip; }
