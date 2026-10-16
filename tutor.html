@@ -238,6 +238,10 @@
     .auth-overlay[hidden] { display: none; }
     /* Until /auth/status has answered, the page shows nothing (no content, tabs, settings, status pill or header logo; the sign-in card carries its own logo): nothing of the tutor flashes before sign-in. visibility keeps the layout, so nothing jumps. */
     body.booting #main, body.booting .appbar .tabs, body.booting .appbar-actions, body.booting .brand-link { visibility: hidden; }
+    body.booting::after { content: "Getting things ready…"; position: fixed; left: 0; right: 0; top: 46%; text-align: center; color: var(--text-faint); font: 0.85rem var(--font-ui); letter-spacing: 0.02em; animation: boot-fade 1.6s ease-in-out infinite; pointer-events: none; }
+    @keyframes boot-fade { 50% { opacity: 0.45; } }
+    @media (prefers-reduced-motion: reduce) { body.booting::after { animation: none; } }
+    body.booting.unreachable::after { content: none; }
     body.booting.unreachable .appbar-actions { visibility: visible; }  /* the pill must be able to say the API can't be reached */
     .auth-logo { align-self: center; margin: 0 0 14px; }
     .auth-logo { --cx: 100.5px; --cy: 26.5px; }
@@ -911,6 +915,15 @@
     @media (max-width: 1480px) { .appbar .conn #conn-text { display: none; } .appbar .tab { padding: 0 10px; gap: 6px; } }
     @media (max-width: 1200px) and (min-width: 721px) { .appbar .tab .tab-label { display: none; } .appbar .tab { padding: 0 12px; } }
     footer { display: none; }
+    .result { scroll-margin-top: 130px; }
+    #practice-again { position: sticky; bottom: 12px; z-index: 5; margin-top: 12px; box-shadow: 0 6px 22px rgba(0, 0, 0, 0.4); }
+    @media (max-width: 720px) { #practice-again { bottom: calc(70px + env(safe-area-inset-bottom)); } }
+    .auth-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 0 0 14px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-soft); }
+    .auth-toggle[hidden] { display: none; }
+    .auth-toggle button { width: 100%; text-align: center; background: transparent; border: 0; color: var(--text-muted); padding: 8px 10px; border-radius: calc(var(--radius-soft) - 2px); font: 600 0.84rem var(--font-ui); cursor: pointer; letter-spacing: 0; text-transform: none; box-shadow: none; }
+    .auth-toggle button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
+    .rail-label { color: var(--text-faint); font-size: 0.85em; margin-left: 4px; white-space: nowrap; }
+    .rail-more { display: flex; justify-content: center; padding: 4px 0 2px; }
 
     /* The live view of a practice learner: what it does, as it happens (admin only). */
     .watch-overlay { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 16px; background: rgba(5, 8, 15, 0.72); }
@@ -1389,6 +1402,10 @@
 
     <div class="auth-overlay" id="auth-overlay" hidden>
       <form class="auth-card" id="auth-form" autocomplete="on" aria-labelledby="auth-title">
+        <div class="auth-toggle" id="auth-toggle" role="group" aria-label="Create an account or sign in" hidden>
+          <button type="button" id="auth-tab-register">Create account</button>
+          <button type="button" id="auth-tab-login">Sign in</button>
+        </div>
         <p class="auth-eyebrow" id="auth-eyebrow"></p>
         <h2 id="auth-title">Sign in</h2>
         <p class="auth-sub" id="auth-sub"></p>
@@ -2339,6 +2356,11 @@
       authSwitch.textContent = { login: "New here? Create an account", register: "Already have an account? Sign in", change: "Sign out instead",
         dead: "Go to sign in", forgot: "Back to sign in", recover: "Back to sign in", sent: "Back to sign in", confirmed: "Continue", check: "Back to sign in" }[mode] || "";
       setShown("auth-consent", ["register", "join"].includes(mode));
+      // someone who already has an account must see at once that "Sign in" is a choice, not a small link
+      const toggle = (mode === "login" || mode === "register") && !first && signupOpen;
+      setShown("auth-toggle", toggle);
+      document.getElementById("auth-tab-register").setAttribute("aria-pressed", String(mode === "register"));
+      document.getElementById("auth-tab-login").setAttribute("aria-pressed", String(mode === "login"));
       document.getElementById("auth-forgot").hidden = !(mode === "login" && recoveryOn);
       document.getElementById("auth-recover").hidden = !(mode === "login" && auth.enabled);
       authError.textContent = "";
@@ -2361,6 +2383,8 @@
       authPwToggle.setAttribute("aria-label", reveal ? "Hide password" : "Show password");
       authPassword.focus();
     });
+    document.getElementById("auth-tab-register").addEventListener("click", () => { if (authMode !== "register") showAuth("register"); });
+    document.getElementById("auth-tab-login").addEventListener("click", () => { if (authMode !== "login") showAuth("login"); });
     document.getElementById("auth-forgot").addEventListener("click", () => showAuth("forgot"));
     document.getElementById("auth-recover").addEventListener("click", () => showAuth("recover"));
 
@@ -3412,7 +3436,8 @@
       const preloaded = view.sources.find((s) => s.default);
       const own = view.sources.some((s) => !s.default);
       let done = false; try { done = localStorage.getItem(startKey()) === "1"; } catch (_) {}
-      card.hidden = !(isLearner() && preloaded && !own && !done);
+      const begun = !!(view.summary && view.summary.totals && view.summary.totals.attempts > 0);   // the guide is for the very first visit
+      card.hidden = !(isLearner() && preloaded && !own && !done && !begun);
       if (card.hidden) return;
       const name = friendly(preloaded.title);
       $("start-text").textContent = `Add a GitHub repository, files or notes and SCIRE turns them into a course. Or keep studying ${name}, which comes with SCIRE.`;
@@ -3896,7 +3921,7 @@
         metric(ico("checkCircle"), `${pct(acc.last_7d)}${trend}`, "Accuracy, 7 days", acc.last_7d == null ? "Right answers in the last 7 days. Nothing answered yet." : `Answers you got right in the last 7 days${acc.previous_7d != null ? `, against ${acc.previous_7d}% the week before` : ""}.`),
         metric(ico("refresh"), t.due_now, "Due now", t.due_now ? "Topics you are about to forget. Review them now." : "Nothing is due. Your schedule brings topics back just before you would forget them.", t.due_now ? "warn" : ""),
         metric(ico("flame"), `${s.streak_days}d`, "Streak", s.streak_days ? "Days in a row you answered at least one question. Miss a day and it starts again." : "Answer one question today to start a streak."),
-        metric(ico("target"), `${Math.min(today, 99)}/${goal}`, "Today", `Answers today against your daily goal of ${goal}. Click to change the goal.`, today >= goal ? "good" : ""),
+        metric(ico("target"), today >= goal ? `${goal}/${goal}` : `${today}/${goal}`, today >= goal ? "Goal reached" : "Today", `${today} answer${today === 1 ? "" : "s"} today against your daily goal of ${goal}. Click to change the goal.`, today >= goal ? "good" : ""),
       ].join("");
     }
     function topicRow(t) {
@@ -3942,7 +3967,7 @@
       if (!view.summary || force) homeSkeleton();
       try {
         const [summary, next] = await Promise.all([callApi(`/tutor/me/summary${srcQ()}`), callApi(`/tutor/next?user_id=${encodeURIComponent(userId())}${srcQ("&")}`)]);
-        view.summary = summary; view.next = next;
+        view.summary = summary; view.next = next; renderStartGuide();
         try { view.ladder = await callApi(`/tutor/me/ladder${srcQ()}`); } catch (_) { view.ladder = null; }
         await loadPath();
         renderHome();
@@ -3991,7 +4016,7 @@
     }
     $("home-metrics").addEventListener("click", (e) => {
       const m = e.target.closest(".metric");
-      if (m && m.getAttribute("aria-label").startsWith("Today")) {
+      if (m && /^(Today|Goal reached)/.test(m.getAttribute("aria-label"))) {
         const next = { 3: 5, 5: 10, 10: 3 }[dailyGoal()] || 5;
         try { localStorage.setItem(goalKey, String(next)); } catch (_) {}
         if (view.summary) $("home-metrics").innerHTML = metricsHtml(view.summary);
@@ -4047,11 +4072,13 @@
       const L = view.ladder;
       let items;
       if (L && L.rungs && L.rungs.length) {
-        const rung = (r) => `<li><button type="button" class="rail-btn" data-key="${escapeHtml(r.key)}" data-tip="${escapeHtml(r.level === "new" ? "Not started" : `${LEVEL[r.level]}, ${r.mastery}% mastery`)}">${r.due ? '<span class="due-dot" aria-hidden="true"></span>' : ico(r.climbed ? "check" : "target", "sm")}<span class="grow">${escapeHtml(r.title)}</span><span class="chip${r.climbed ? " good" : ""}">${r.level === "new" ? "new" : r.mastery + "%"}</span></button></li>`;
+        const rung = (r) => `<li><button type="button" class="rail-btn" data-key="${escapeHtml(r.key)}" data-tip="${escapeHtml(r.level === "new" ? "Not started" : `${LEVEL[r.level]}, ${r.mastery}% mastery`)}">${r.due ? '<span class="due-dot" aria-hidden="true"></span>' : ico(r.climbed ? "check" : "target", "sm")}<span class="grow">${topicLabel(r.title)}</span><span class="chip${r.climbed ? " good" : ""}">${r.level === "new" ? "new" : r.mastery + "%"}</span></button></li>`;
         items = L.stages.map((st) => {
           const head = `<li class="stage-h${st.current ? " now" : ""}" data-tip="${escapeHtml(st.index > L.current ? "Build the earlier stages first. This opens as you climb them." : `${st.climbed} of ${st.total} climbed`)}">${ico(st.index > L.current ? "lock" : st.climbed === st.total ? "check" : "layers", "sm")}<span>${st.index + 1}. ${escapeHtml(st.name)}</span><span class="faint">${st.climbed}/${st.total}</span></li>`;
-          const rows = st.index === L.current ? L.rungs.filter((r) => r.stage === st.index).slice(0, 12).map(rung).join("") : "";
-          return head + rows;
+          const all = st.index === L.current ? L.rungs.filter((r) => r.stage === st.index) : [];
+          const shown = view.railAll ? all : all.slice(0, 12);
+          const more = all.length > 12 ? `<li class="rail-more"><button type="button" class="secondary small" data-more="1">${view.railAll ? "Show fewer" : `Show all ${all.length}`}</button></li>` : "";
+          return head + shown.map(rung).join("") + more;
         });
       } else {
         const practiced = s ? [...s.topics].sort(byUrgency) : [];
@@ -4060,7 +4087,15 @@
       $("practice-rail-list").innerHTML = items.length ? items.join("") : `<li class="faint" style="padding:6px 2px">Type a topic above. Topics you practice are listed here, due ones first.</li>`;
     }
     $("ask-rail").addEventListener("click", (e) => { const b = e.target.closest("[data-q]"); if (b) { $("chat-query").value = b.dataset.q; autoSizeComposer(); $("chat-form").requestSubmit(); } });
-    $("practice-rail-list").addEventListener("click", (e) => { const b = e.target.closest("[data-key]"); if (b) practiceTopic(b.dataset.key); });
+    $("practice-rail-list").addEventListener("click", (e) => {
+      if (e.target.closest("[data-more]")) { view.railAll = !view.railAll; renderRails(); return; }
+      const b = e.target.closest("[data-key]"); if (b) practiceTopic(b.dataset.key);
+    });
+    // "Constraints and assumptions (Hash map)": the part in brackets tells look-alike topics apart, so it is shown, but quieter than the topic.
+    function topicLabel(title) {
+      const m = /^(.*\S)\s+\(([^()]+)\)$/.exec(title);
+      return m ? `${escapeHtml(m[1])} <span class="rail-label">${escapeHtml(m[2])}</span>` : escapeHtml(title);
+    }
 
     // --- Progress: the knowledge map, measures, and the plan ---
     let mapLoading = null;
@@ -4304,10 +4339,11 @@
       if (isLearner() && window.ScireOffline && view.mode && view.mode.mode === "online") window.ScireOffline.signedIn(auth.user.username);
       await checkHealth();
       if (isLearner()) {
-        loadLimits().then(maybeShowNotice);
+        const limits = loadLimits();
         await loadSources();
         const wanted = routeTab() || tabFor("home");
         if (wanted) activateTab(wanted, false, routeTab() ? "none" : "replace");
+        limits.then(() => setTimeout(maybeShowNotice, 900));   // after the page has something on it, never over an empty screen
       }
     }
 
@@ -4812,6 +4848,7 @@ def _tt_run(user_src, ctx):
         (note ? `<p class="muted small">${escapeHtml(note)}</p>` : "") +
         `<p class="muted small">You will see "${escapeHtml(String(data.mastery.topic).split("::").pop())}" again ${escapeHtml(dueText(data.mastery.next_review_at))}.</p>`;
       el.style.display = "block";
+      el.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });   // the verdict, not the bottom of a long page
     }
 
     practiceGradeForm.addEventListener("submit", async (e) => {
