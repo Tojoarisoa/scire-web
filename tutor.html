@@ -912,6 +912,34 @@
     @media (max-width: 1200px) and (min-width: 721px) { .appbar .tab .tab-label { display: none; } .appbar .tab { padding: 0 12px; } }
     footer { display: none; }
 
+    /* The live view of a practice learner: what it does, as it happens (admin only). */
+    .watch-overlay { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 16px; background: rgba(5, 8, 15, 0.72); }
+    .watch-overlay[hidden] { display: none; }
+    .watch-card { width: min(760px, 100%); max-height: min(86dvh, 860px); display: grid; grid-template-rows: auto 1fr; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-cozy); box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5); overflow: hidden; }
+    .watch-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .watch-head h2 { margin: 0; font: 650 1rem var(--font-ui); }
+    .watch-spacer { flex: 1; }
+    .watch-live { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--text-muted); }
+    .watch-live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--text-faint); }
+    .watch-live.on::before { background: var(--ok, #3ddc97); box-shadow: 0 0 8px var(--ok, #3ddc97); }
+    .watch-feed { list-style: none; margin: 0; padding: 6px 0; overflow-y: auto; overscroll-behavior: contain; min-height: 220px; }
+    .watch-feed li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 10px; padding: 8px 14px; border-bottom: 1px solid var(--border); }
+    .watch-feed li:last-child { border-bottom: none; }
+    .watch-time { font: 0.72rem var(--font-mono, monospace); color: var(--text-faint); padding-top: 2px; }
+    .watch-body { min-width: 0; overflow-wrap: anywhere; font-size: 0.88rem; line-height: 1.45; }
+    .watch-kind { font-weight: 650; margin-right: 6px; }
+    .watch-kind.k-question { color: var(--accent); }
+    .watch-kind.k-answer, .watch-kind.k-review { color: var(--accent2); }
+    .watch-kind.k-hint { color: var(--warn, #f5b84b); }
+    .watch-note { grid-column: 2; font-size: 0.74rem; color: var(--text-faint); }
+    .watch-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+    .watch-chip { font-size: 0.72rem; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-muted); }
+    .watch-chip.good { color: var(--ok, #3ddc97); border-color: currentColor; }
+    .watch-chip.bad { color: var(--bad, #ff5d73); border-color: currentColor; }
+    .watch-empty { margin: 0; padding: 18px 14px; color: var(--text-muted); font-size: 0.86rem; }
+    .watch-empty[hidden] { display: none; }
+    @media (max-width: 560px) { .watch-feed li { grid-template-columns: minmax(0, 1fr); } .watch-note { grid-column: 1; } }
+
     /* The header leads with the first step. Right side, from the logo: Add material (the call to action), one word of status, the learner's initial.
        The initial opens the account menu: name, status, Settings, theme, Sign out. */
     .appbar-actions { gap: 10px; }
@@ -1497,6 +1525,21 @@
       </section>
     </div>
 
+    <div class="watch-overlay" id="watch-overlay" role="dialog" aria-modal="true" aria-labelledby="watch-title" hidden>
+      <section class="watch-card">
+        <header class="watch-head">
+          <h2 id="watch-title">Live view</h2>
+          <span class="watch-live" id="watch-live" aria-live="polite"></span>
+          <span class="watch-spacer"></span>
+          <button type="button" class="secondary small" id="watch-pause">Pause</button>
+          <button type="button" class="secondary small" id="watch-clear">Clear</button>
+          <button type="button" class="icon-btn" id="watch-close" aria-label="Close the live view"><span data-icon="x"></span></button>
+        </header>
+        <ol class="watch-feed" id="watch-feed" aria-label="What the learner is doing"></ol>
+        <p class="watch-empty" id="watch-empty">Nothing yet. What the learner does will show up here as it happens.</p>
+      </section>
+    </div>
+
     <div class="auth-overlay" id="notice-overlay" hidden>
       <section class="auth-card notice-card" role="dialog" aria-modal="true" aria-labelledby="notice-title">
         <h2 id="notice-title">Before you start</h2>
@@ -1707,6 +1750,10 @@
       <div class="control-row" style="margin-top: 8px;">
         <div><strong>Email</strong><span id="email-state"></span></div>
         <button type="button" class="secondary small" id="email-test">Send test email</button>
+      </div>
+      <div class="control-row" style="margin-top: 8px;" id="watch-row" hidden>
+        <div><strong>Practice learner</strong><span id="watch-state"></span></div>
+        <button type="button" class="secondary small btn-ico" id="watch-open"><span data-icon="eye" data-icon-class="sm"></span>Watch live</button>
       </div>
 
       <h3 class="sec-sub">Learners</h3>
@@ -2856,8 +2903,76 @@
         renderAdmins(data.admins);
         loadInvites();
         loadEvents();
+        watchProbe();
       } catch (err) { learnersMessage(err.message, true); }
     }
+    // --- Live view of a practice learner (admin only): what it does, as it happens ---
+    const wq = (id) => document.getElementById(id);
+    const watchView = { open: false, paused: false, after: 0, timer: 0, users: [] };
+    const WATCH_KIND = { ask: "Asked the tutor", question: "Got a question", hint: "Asked for a hint", answer: "Answered", review: "Answered a review", step: "Ticked a step", path: "Looked at the study path" };
+    function watchRow(e) {
+      const li = document.createElement("li");
+      const t = document.createElement("span"); t.className = "watch-time"; t.textContent = new Date(e.at).toLocaleTimeString([], { hour12: false });
+      const body = document.createElement("div"); body.className = "watch-body";
+      const kind = document.createElement("span"); kind.className = `watch-kind k-${e.kind}`; kind.textContent = WATCH_KIND[e.kind] || e.kind;
+      body.append(kind, document.createTextNode(e.text || ""));
+      const chips = document.createElement("div"); chips.className = "watch-chips";
+      const chip = (txt, cls = "") => { const c = document.createElement("span"); c.className = `watch-chip ${cls}`.trim(); c.textContent = txt; chips.append(c); };
+      if (e.topic) chip(e.topic);
+      if (e.score != null) chip(`${e.score}%`, e.passed ? "good" : "bad");
+      if (e.passed != null) chip(e.passed ? "Right" : "Not quite", e.passed ? "good" : "bad");
+      if (e.level) chip(`Hint ${e.level}`);
+      if (e.hints) chip(`${e.hints} hint${e.hints === 1 ? "" : "s"} used`);
+      if (chips.children.length) body.append(chips);
+      if (e.feedback) { const f = document.createElement("div"); f.className = "watch-note"; f.textContent = e.feedback; body.append(f); }
+      li.append(t, body);
+      if (e.note) { const n = document.createElement("div"); n.className = "watch-note"; n.textContent = e.note; li.append(n); }
+      return li;
+    }
+    async function watchPoll(first) {
+      let d;
+      try { d = await callApi(`/admin/agent/activity?after=${watchView.after}&limit=${first ? 200 : 100}`); } catch { return; }
+      watchView.users = d.watching || [];
+      wq("watch-live").textContent = d.active ? "Active now" : (d.idle_s == null ? "Waiting" : "Idle");
+      wq("watch-live").classList.toggle("on", !!d.active);
+      const feed = wq("watch-feed");
+      const stick = first || feed.scrollHeight - feed.scrollTop - feed.clientHeight < 60;   // keep following unless they scrolled up to read
+      for (const e of d.events) feed.append(watchRow(e));
+      while (feed.children.length > 500) feed.firstChild.remove();
+      watchView.after = Math.max(watchView.after, d.latest || 0);
+      wq("watch-empty").hidden = feed.children.length > 0;
+      if (stick && d.events.length) feed.scrollTop = feed.scrollHeight;
+    }
+    function watchTick() {
+      clearTimeout(watchView.timer);
+      if (!watchView.open) return;
+      if (!watchView.paused && document.visibilityState === "visible") watchPoll(false);
+      watchView.timer = setTimeout(watchTick, 1500);
+    }
+    function openWatch() {
+      watchView.open = true; watchView.paused = false; watchView.after = 0;
+      wq("watch-feed").replaceChildren(); wq("watch-empty").hidden = false; wq("watch-pause").textContent = "Pause";
+      wq("watch-title").textContent = watchView.users.length ? `Live view: ${watchView.users.join(", ")}` : "Live view";
+      wq("watch-overlay").hidden = false;
+      wq("watch-close").focus();
+      watchPoll(true).then(() => { watchView.timer = setTimeout(watchTick, 1500); });
+    }
+    function closeWatch() { watchView.open = false; clearTimeout(watchView.timer); wq("watch-overlay").hidden = true; wq("watch-open").focus(); watchProbe(); }
+    async function watchProbe() {
+      try {
+        const d = await callApi("/admin/agent/activity?after=0&limit=1");
+        watchView.users = d.watching || [];
+        wq("watch-row").hidden = !watchView.users.length;
+        wq("watch-state").textContent = watchView.users.length ? `${watchView.users.join(", ")}: ${d.active ? "active now" : "idle"}` : "";
+      } catch { wq("watch-row").hidden = true; }
+    }
+    wq("watch-open").addEventListener("click", openWatch);
+    wq("watch-close").addEventListener("click", closeWatch);
+    wq("watch-pause").addEventListener("click", () => { watchView.paused = !watchView.paused; wq("watch-pause").textContent = watchView.paused ? "Resume" : "Pause"; });
+    wq("watch-clear").addEventListener("click", () => { wq("watch-feed").replaceChildren(); wq("watch-empty").hidden = false; });
+    wq("watch-overlay").addEventListener("click", (e) => { if (e.target === wq("watch-overlay")) closeWatch(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && watchView.open) closeWatch(); });
+
     // --- Activity (the audit log) ---
     const evList = document.getElementById("ev-list");
     const evMore = document.getElementById("ev-more");
