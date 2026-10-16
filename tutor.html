@@ -922,7 +922,10 @@
     .auth-toggle[hidden] { display: none; }
     .auth-toggle button { width: 100%; text-align: center; background: transparent; border: 0; color: var(--text-muted); padding: 8px 10px; border-radius: calc(var(--radius-soft) - 2px); font: 600 0.84rem var(--font-ui); cursor: pointer; letter-spacing: 0; text-transform: none; box-shadow: none; }
     .auth-toggle button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
-    .rail-label { color: var(--text-faint); font-size: 0.85em; margin-left: 4px; white-space: nowrap; }
+    .rail-label { color: var(--text-faint); font-size: 0.85em; margin-right: 2px; }
+    .rail-label::after { content: ":"; }
+    /* A long topic name wraps to a second line instead of being cut to a stub; the full name is in the tip */
+    #practice-rail-list .rail-btn .grow { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; }
     .rail-more { display: flex; justify-content: center; padding: 4px 0 2px; }
 
     /* The live view of a practice learner: what it does, as it happens (admin only). */
@@ -4072,7 +4075,7 @@
       const L = view.ladder;
       let items;
       if (L && L.rungs && L.rungs.length) {
-        const rung = (r) => `<li><button type="button" class="rail-btn" data-key="${escapeHtml(r.key)}" data-tip="${escapeHtml(r.level === "new" ? "Not started" : `${LEVEL[r.level]}, ${r.mastery}% mastery`)}">${r.due ? '<span class="due-dot" aria-hidden="true"></span>' : ico(r.climbed ? "check" : "target", "sm")}<span class="grow">${topicLabel(r.title)}</span><span class="chip${r.climbed ? " good" : ""}">${r.level === "new" ? "new" : r.mastery + "%"}</span></button></li>`;
+        const rung = (r) => `<li><button type="button" class="rail-btn" data-key="${escapeHtml(r.key)}" title="${escapeHtml(r.title)}" data-tip="${escapeHtml(r.level === "new" ? "Not started" : `${LEVEL[r.level]}, ${r.mastery}% mastery`)}">${r.due ? '<span class="due-dot" aria-hidden="true"></span>' : ico(r.climbed ? "check" : "target", "sm")}<span class="grow">${topicLabel(r.title)}</span><span class="chip${r.climbed ? " good" : ""}">${r.level === "new" ? "new" : r.mastery + "%"}</span></button></li>`;
         items = L.stages.map((st) => {
           const head = `<li class="stage-h${st.current ? " now" : ""}" data-tip="${escapeHtml(st.index > L.current ? "Build the earlier stages first. This opens as you climb them." : `${st.climbed} of ${st.total} climbed`)}">${ico(st.index > L.current ? "lock" : st.climbed === st.total ? "check" : "layers", "sm")}<span>${st.index + 1}. ${escapeHtml(st.name)}</span><span class="faint">${st.climbed}/${st.total}</span></li>`;
           const all = st.index === L.current ? L.rungs.filter((r) => r.stage === st.index) : [];
@@ -4091,10 +4094,11 @@
       if (e.target.closest("[data-more]")) { view.railAll = !view.railAll; renderRails(); return; }
       const b = e.target.closest("[data-key]"); if (b) practiceTopic(b.dataset.key);
     });
-    // "Constraints and assumptions (Hash map)": the part in brackets tells look-alike topics apart, so it is shown, but quieter than the topic.
+    // "Constraints and assumptions (Hash map)": the part in brackets is the case it belongs to. It comes first and quieter ("Hash map: Constraints
+    // and assumptions"), so the topics of one case sit together and the look-alikes read apart at a glance.
     function topicLabel(title) {
       const m = /^(.*\S)\s+\(([^()]+)\)$/.exec(title);
-      return m ? `${escapeHtml(m[1])} <span class="rail-label">${escapeHtml(m[2])}</span>` : escapeHtml(title);
+      return m ? `<span class="rail-label">${escapeHtml(m[2])}</span> ${escapeHtml(m[1])}` : escapeHtml(title);
     }
 
     // --- Progress: the knowledge map, measures, and the plan ---
