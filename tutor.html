@@ -4045,7 +4045,7 @@
     }
     $("next-card").addEventListener("click", (e) => { const b = e.target.closest("[data-act]"); if (b && !b.disabled) homeAction(b); });
     $("home-quick").addEventListener("click", (e) => { const b = e.target.closest("[data-act]"); if (b) homeAction(b); });
-    for (const id of ["home-topics", "progress-topics", "practice-rail-list"]) $(id).addEventListener("click", (e) => { const b = e.target.closest("[data-key]"); if (b) practiceTopic(b.dataset.key); });
+    for (const id of ["home-topics", "progress-topics"]) $(id).addEventListener("click", (e) => { const b = e.target.closest("[data-key]"); if (b) practiceTopic(b.dataset.key); });
     function practiceTopic(key) {
       if (!key) return;
       goTab("practice");
@@ -4098,7 +4098,8 @@
     // and assumptions"), so the topics of one case sit together and the look-alikes read apart at a glance.
     function topicLabel(title) {
       const m = /^(.*\S)\s+\(([^()]+)\)$/.exec(title);
-      return m ? `<span class="rail-label">${escapeHtml(m[2])}</span> ${escapeHtml(m[1])}` : escapeHtml(title);
+      const isCase = m && /^\p{Lu}/u.test(m[2]) && !/^(or|and|aka|also|e\.g\.|i\.e\.|optional|see)\b/i.test(m[2]);   // "(or Bit.ly)" is an aside, not a case
+      return isCase ? `<span class="rail-label">${escapeHtml(m[2])}</span> ${escapeHtml(m[1])}` : escapeHtml(title);
     }
 
     // --- Progress: the knowledge map, measures, and the plan ---
