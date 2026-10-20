@@ -2800,7 +2800,7 @@
           loaded = true;
         } catch (err) { detail.replaceChildren(el("p", "", err.message)); }
       }));
-      if (r.has_account) actions.append(actionButton("Make admin", () => setRole(r.username, "admin")));
+      if (r.has_account && !r.agent) actions.append(actionButton("Make admin", () => setRole(r.username, "admin")));
       actions.append(actionButton("Reset progress", () => resetProgress(r.username), "danger"));
       card.append(actions);
       if (r.has_account) {
